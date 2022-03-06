@@ -10,6 +10,8 @@ import javazoom.jl.decoder.JavaLayerException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -18,7 +20,8 @@ import java.util.List;
 import static javax.sound.sampled.AudioSystem.getAudioInputStream;
 
 public class ServerForm1 extends JFrame implements Runnable {
-  
+  private final JButton sub;
+
   // Components of the Form
   
   private Container c;
@@ -102,6 +105,19 @@ public class ServerForm1 extends JFrame implements Runnable {
     totalRecivesValue.setSize( 100, 20);
     totalRecivesValue.setLocation( 210, 170);
     c.add( totalRecivesValue );
+
+
+    sub = new JButton("Change Action");
+    sub.setFont(new Font("Arial", Font.PLAIN, 15));
+    sub.setSize(150, 20);
+    sub.setLocation(100, 300);
+    sub.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+             CPlayer.ChangeFlag();
+      }
+    });
+    c.add(sub);
 
     
     
