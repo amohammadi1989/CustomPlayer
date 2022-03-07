@@ -114,7 +114,7 @@ public class ServerForm1 extends JFrame implements Runnable {
     sub.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
-             CPlayer.ChangeFlag();
+            // CPlayer.ChangeFlag();
       }
     });
     c.add(sub);

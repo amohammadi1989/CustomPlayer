@@ -46,21 +46,19 @@ public class CMPlayer {
     public static void PlayMusic() {
         STATE_STOP = false;
         STATE_PAUSE.set(false);
-        if (!isPlayer.get()) {
+        //if (!isPlayer.get()) {
             Runnable runnablePlay = new Runnable() {
                 @Override
                 public void run() {
-                    while (true) {
-                        if (!STATE_PAUSE.get() && !STATE_STOP) {
+                    while (!STATE_PAUSE.get() && !STATE_STOP) {
                             CheckToPlay();
-                        }
                     }
                 }
             };
             Thread threadPlay = new Thread(runnablePlay);
             threadPlay.start();
             isPlayer.set(true);
-        }
+      //  }
     }
 
     public static Long GetTotalBytesOfCurrentFile() {
@@ -138,10 +136,6 @@ public class CMPlayer {
                 h = bitstream.readFrame();
             } catch (BitstreamException ex) {
             }
-          //  int size = h.calculate_framesize();
-           // float ms_per_frame = h.ms_per_frame();
-            //int maxSize = h.max_number_of_frames(10000);
-           // float t = h.total_ms(size);
             long tn = 0;
             try {
                 tn = file.getChannel().size();
@@ -294,9 +288,15 @@ public class CMPlayer {
         if (ExistsSong()) {
             STATE_PAUSE.set(false);
             CMPLAYED = true;
+            PlayMusic();
         }
     }
-
+    public static void ResumeMusicForSkip() {
+        if (ExistsSong()) {
+            STATE_PAUSE.set(false);
+            CMPLAYED = true;
+        }
+    }
     public static void PauseMusic() {
         if (ExistsSong()) {
             STATE_PAUSE.set(true);
@@ -340,7 +340,7 @@ public class CMPlayer {
 
         PauseMusic();
         detailsSongs.get(CURRENT_PLAY.get()).setSkip(skip);
-        ResumeMusic();
+        ResumeMusicForSkip();
 
     }
 

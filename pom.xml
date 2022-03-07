@@ -18,12 +18,7 @@
         <artifactId>jlayer</artifactId>
         <version>1.0.1.4</version>
     </dependency>
-    <dependency>
-        <groupId>com.sun</groupId>
-        <artifactId>mp3plugin</artifactId>
-        <version>1.0</version>
 
-    </dependency>
     <dependency>
         <groupId>org</groupId>
         <artifactId>jaudiotagger</artifactId>
