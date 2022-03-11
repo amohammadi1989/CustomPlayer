@@ -13,12 +13,13 @@ public class CMPlayer {
 
     static List<Song> detailsSongs;
 
-    static AtomicBoolean isPlayer = new AtomicBoolean(false);
-    static AtomicInteger CURRENT_PLAY = new AtomicInteger(0);
+    static volatile AtomicBoolean isPlayer = new AtomicBoolean(false);
+    static volatile AtomicInteger CURRENT_PLAY = new AtomicInteger(0);
+    static volatile Integer PREVIOUS_PLAY=-1;
     static volatile boolean CMPLAYED = false;
-    static AtomicBoolean STATE_PAUSE = new AtomicBoolean(true);
+    static volatile AtomicBoolean STATE_PAUSE = new AtomicBoolean(true);
 
-    static Boolean STATE_STOP = true;
+    static volatile Boolean STATE_STOP = true;
 
     private static CMPlayer cmPlayer = new CMPlayer();
 
@@ -38,40 +39,64 @@ public class CMPlayer {
     public static Boolean isCMPlayed() {
         return CMPLAYED;
     }
+    private synchronized static void initPlayer() {
 
+        if (detailsSongs.get(CURRENT_PLAY.get()).getContent() == null) {
+            ByteArrayOutputStream content = CMPlayer.getContentOfFile(detailsSongs.get(CURRENT_PLAY.get()).getName());
+            detailsSongs.get(CURRENT_PLAY.get()).setContent(content);
+            detailsSongs.get(CURRENT_PLAY.get()).setLen((long)content.size());
+        }
+        if(PREVIOUS_PLAY==-1){
+            PREVIOUS_PLAY=CURRENT_PLAY.get();
+        }else {
+            if(PREVIOUS_PLAY!=CURRENT_PLAY.get()) {
+                detailsSongs.get(PREVIOUS_PLAY).setContent(null);
+                detailsSongs.get(PREVIOUS_PLAY).setLen(null);
+                PREVIOUS_PLAY=CURRENT_PLAY.get();
+                System.gc();
+            }
+        }
+    }
     public static int GetCurrentPlay(){
         return CURRENT_PLAY.get();
     }
 
     public static void PlayMusic() {
+        CPlayer.Clear();
         STATE_STOP = false;
         STATE_PAUSE.set(false);
         //if (!isPlayer.get()) {
-            Runnable runnablePlay = new Runnable() {
-                @Override
-                public void run() {
-                    while (!STATE_PAUSE.get() && !STATE_STOP) {
-                            CheckToPlay();
-                    }
+        Runnable runnablePlay = new Runnable() {
+            @Override
+            public void run() {
+                while (!STATE_PAUSE.get() && !STATE_STOP) {
+
+                    CheckToPlay();
                 }
-            };
-            Thread threadPlay = new Thread(runnablePlay);
-            threadPlay.start();
-            isPlayer.set(true);
-      //  }
+            }
+        };
+        Thread threadPlay = new Thread(runnablePlay);
+        threadPlay.start();
+        isPlayer.set(true);
+        //  }
     }
 
-    public static Long GetTotalBytesOfCurrentFile() {
+    public synchronized static int GetTotalBytesOfCurrentFile() {
         try {
-            return detailsSongs.get(CURRENT_PLAY.get()).getLen();
-        }catch (Exception e){
+            //initPlayer();
+            if(detailsSongs.get(CURRENT_PLAY.get())!=null) {
+                if(detailsSongs.get(CURRENT_PLAY.get()).getLen()>0)
+                    return detailsSongs.get(CURRENT_PLAY.get()).getLen().intValue();
+            }
+
+        } catch (Exception e) {
             //  e.printStackTrace();
         }
-        return 0l;
+        return 0;
 
     }
 
-    public static long GetReadBytesOfCurrentFile() {
+    public synchronized static long GetReadBytesOfCurrentFile() {
         try {
             return (detailsSongs.get(CURRENT_PLAY.get()).getLen().intValue() - CPlayer.AvailableCurrent());
         }catch (Exception ex){
@@ -81,9 +106,12 @@ public class CMPlayer {
         //return CPlayer.AvailableCurrent();
     }
 
-    public static void SelectedMusic(int i) {
+    public  static synchronized void SelectedMusic(int i) {
         StopMusic();
         CURRENT_PLAY.set(i);
+        try {
+            Thread.sleep(10);
+        }catch (Exception ex){}
         PlayMusic();
         System.out.printf("cu="+i);
         CURRENT_PLAY.set(i);
@@ -96,18 +124,20 @@ public class CMPlayer {
 
     private static void CheckToPlay() {
         if (ExistsSong()) {
+            initPlayer();
             Song song = detailsSongs.get(CURRENT_PLAY.get());
             long skip = song.skip!=0?(long)song.skip:0;
             CMPLAYED = true;
             song.setSkip(0);
-            boolean isComplete=CPlayer.Play(song.content, skip);
+            boolean isComplete=CPlayer.Play(detailsSongs.get(CURRENT_PLAY.get()).getContent(), skip);
             CMPLAYED = false;
+            System.gc();
             if (!STATE_PAUSE.get() && !STATE_STOP && isComplete)
                 ChangeCurrentPlayNext();
         }
     }
 
-    public static String GetReadTimeOfCurrentPlay(){
+    public synchronized static String GetReadTimeOfCurrentPlay(){
         try{
             long totalLen= GetTotalBytesOfCurrentFile();
             long curentPlay= GetReadBytesOfCurrentFile();
@@ -120,7 +150,7 @@ public class CMPlayer {
         return "0:0";
     }
 
-    public static long GetTotalTimeOfCurrentPlay(){
+    public synchronized static long GetTotalTimeOfCurrentPlay(){
         try {
 
             String path = detailsSongs.get(CURRENT_PLAY.get()).getName();
@@ -154,7 +184,7 @@ public class CMPlayer {
 
     }
 
-    public static String ConvertSecondToMinute(long s){
+    public synchronized static String ConvertSecondToMinute(long s){
 
         long minute = TimeUnit.SECONDS.toMinutes(s) - (TimeUnit.SECONDS.toHours(s)* 60);
         long second = TimeUnit.SECONDS.toSeconds(s) - (TimeUnit.SECONDS.toMinutes(s) *60);
@@ -162,7 +192,7 @@ public class CMPlayer {
 
     }
 
-    private static Boolean ExistsSong() {
+    private synchronized static Boolean ExistsSong() {
         try {
             if(CURRENT_PLAY.get()<detailsSongs.size()) {
                 return detailsSongs.get(CURRENT_PLAY.get()) != null ? true : false;
@@ -174,33 +204,33 @@ public class CMPlayer {
 
     }
 
-    private static void ChangeCurrentPlayNext() {
+    private synchronized static void ChangeCurrentPlayNext() {
         CURRENT_PLAY.set(CURRENT_PLAY.get() + 1);
         if(CURRENT_PLAY.get()==detailsSongs.size()){
             CURRENT_PLAY.set(0);
         }
     }
 
-    private static void ChangeCurrentPlayPreviews() {
+    private synchronized static void ChangeCurrentPlayPreviews() {
         CURRENT_PLAY.set(CURRENT_PLAY.get() - 1);
         if(CURRENT_PLAY.get()<0){
             CURRENT_PLAY.set(detailsSongs.size()-1);
         }
     }
 
-    public static void AddMusicToList(String path) {
+    public synchronized static void AddMusicToList(String path) {
 
-        ByteArrayOutputStream out = getContentOfFile(path);
+        // ByteArrayOutputStream out = getContentOfFile(path);
 
         //create new song
-        Song song = new Song((long) out.size(), path, out);
+        Song song = new Song(null, path,null);
 
         //Add to list
         detailsSongs.add(song);
 
     }
 
-    public static int NextMusic() {
+    public synchronized static int NextMusic() {
         try {
             ChangeCurrentPlayNext();
             if (ExistsSong()) {
@@ -239,7 +269,7 @@ public class CMPlayer {
 
     }
 
-    public static int PreviousMusic() {
+    public synchronized static int PreviousMusic() {
         try {
             ChangeCurrentPlayPreviews();
             if (ExistsSong()) {
@@ -263,41 +293,41 @@ public class CMPlayer {
         }
         return 0;
     }
-    public static String getSelectedMusic(int i) {
+    public synchronized static String getSelectedMusic(int i) {
         return detailsSongs.get(i).getName();
     }
 
-    public static String GetNameOfCurrentPlayed() {
+    public synchronized static String GetNameOfCurrentPlayed() {
         return (detailsSongs.get(CURRENT_PLAY.get()).getName());
     }
 
-    public static String getSelectedMusic() {
+    public synchronized static String getSelectedMusic() {
         File file = new File(GetNameOfCurrentPlayed());
         return fileTime(file.getName().getBytes());
     }
 
 
 
-    public static void StopMusic() {
+    public synchronized static void StopMusic() {
         CMPLAYED = true;
         CPlayer.Stop(detailsSongs.get(CURRENT_PLAY.get()));
         STATE_STOP = true;
     }
 
-    public static void ResumeMusic() {
+    public synchronized static void ResumeMusic() {
         if (ExistsSong()) {
             STATE_PAUSE.set(false);
             CMPLAYED = true;
             PlayMusic();
         }
     }
-    public static void ResumeMusicForSkip() {
+    public synchronized static void ResumeMusicForSkip() {
         if (ExistsSong()) {
             STATE_PAUSE.set(false);
             CMPLAYED = true;
         }
     }
-    public static void PauseMusic() {
+    public synchronized static void PauseMusic() {
         if (ExistsSong()) {
             STATE_PAUSE.set(true);
             CMPLAYED = false;
@@ -361,12 +391,22 @@ public class CMPlayer {
             return len;
         }
 
+        public void setLen(Long len){ this.len=len;}
+
         public String getName() {
             return name;
         }
 
         public int getSkip() {
             return skip;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void setContent(ByteArrayOutputStream content) {
+            this.content = content;
         }
 
         public void setSkip(int skip) {

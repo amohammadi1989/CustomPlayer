@@ -7,6 +7,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="config-services" />
         <module name="batch-to-kafka-services" />
         <module name="CustomPlayer" />
       </profile>
@@ -15,6 +16,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="batch-to-kafka-services" options="-parameters" />
+      <module name="config-services" options="-parameters" />
       <module name="microservices" options="" />
     </option>
   </component>

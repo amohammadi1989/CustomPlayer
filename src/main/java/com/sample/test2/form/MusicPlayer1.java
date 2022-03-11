@@ -227,7 +227,7 @@ public class MusicPlayer1 implements ActionListener {
                 while (true){
                     //if(current==listSong.getSelectedIndex()) {
                     listSong.setSelectedIndex(CMPlayer.GetCurrentPlay());
-                    int len=Integer.valueOf(CMPlayer.GetTotalBytesOfCurrentFile().toString());
+                    int len=Integer.valueOf(CMPlayer.GetTotalBytesOfCurrentFile());
                     jSlider.setMinimum(0);
                     jSlider.setMajorTickSpacing(len/2);
                     jSlider.setPaintTicks(true);

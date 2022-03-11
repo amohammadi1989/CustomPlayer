@@ -6,6 +6,7 @@
       <list>
         <option value="$PROJECT_DIR$/../../event-driven-microservices/pom.xml" />
         <option value="$PROJECT_DIR$/../../event-driven-microservices/demo/batch-to-kafka-services/pom.xml" />
+        <option value="$PROJECT_DIR$/../../event-driven-microservices/config/pom.xml" />
         <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>

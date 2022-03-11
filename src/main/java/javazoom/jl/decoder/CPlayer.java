@@ -103,6 +103,13 @@ public final class CPlayer {
 
         }
     }
+    public static void Clear(){
+        try {
+            player.close();
+        }catch (Exception ex){
+
+        }
+    }
 
     public void executePlayer() {
         Runnable play = new Runnable() {

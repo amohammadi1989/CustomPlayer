@@ -2,6 +2,7 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/../../event-driven-microservices/batch-to-kafka-services/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/../../event-driven-microservices/config-services/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../../event-driven-microservices/demo/batch-to-kafka-services/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../../event-driven-microservices/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/../../event-driven-microservices/src/main/resources" charset="UTF-8" />
